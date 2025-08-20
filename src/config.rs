@@ -66,9 +66,19 @@ lazy_static::lazy_static! {
     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut map = HashMap::new();
+        map.insert("enable-check-update".to_owned(), "N".to_owned());
+        RwLock::new(map)
+    };
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut map = HashMap::new();
+        map.insert("disable-account".to_owned(), "Y".to_owned());
+        map.insert("hide-network-settings".to_owned(), "Y".to_owned());
+            map.insert("hide-remote-printer-settings".to_owned(), "Y".to_owned());
+        RwLock::new(map)
+    };
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
 }
 
@@ -100,8 +110,8 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+pub const RENDEZVOUS_SERVERS: &[&str] = &["ktv.net.dnsnet.cc"];
+pub const RS_PUB_KEY: &str = "sjyzZqN08tYi4Kjcv6FgYLXIpHa5xDVDGWEXh3T6WZ0==";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
@@ -2374,13 +2384,15 @@ pub fn is_disable_installation() -> bool {
 // flutter: flutter/lib/common.dart -> option2bool()
 // sciter: Does not have the function, but it should be kept the same.
 pub fn option2bool(option: &str, value: &str) -> bool {
-    if option.starts_with("enable-") {
+    if option == "direct-server" ||
+       option == "allow-remote-config-modification" ||
+       option == "allow-numeric-one-time-password" {
         value != "N"
-    } else if option.starts_with("allow-")
-        || option == "stop-service"
-        || option == keys::OPTION_DIRECT_SERVER
-        || option == "force-always-relay"
-    {
+    } else if option.starts_with("enable-") {
+        value != "N"
+    } else if option.starts_with("allow-") ||
+              option == "stop-service" ||
+              option == "force-always-relay" {
         value == "Y"
     } else {
         value != "N"
